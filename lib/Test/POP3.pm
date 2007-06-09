@@ -8,7 +8,7 @@ use Test::Email;
 use MIME::Parser;
 use Carp 'croak';
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 my $TEST = Test::Builder->new();
 
@@ -236,7 +236,7 @@ __END__
 
 =head1 NAME
 
-Test::Email - Automate Email Delivery Tests
+Test::POP3 - Automate Email Delivery Tests
 
 =head1 SYNOPSIS
 

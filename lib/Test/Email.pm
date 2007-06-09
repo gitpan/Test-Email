@@ -8,7 +8,7 @@ use Carp 'croak';
 
 use base 'MIME::Entity';
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 my $TEST = Test::Builder->new();
 
