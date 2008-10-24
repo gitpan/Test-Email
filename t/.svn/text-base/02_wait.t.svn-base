@@ -4,19 +4,17 @@ use warnings FATAL => 'all';
 
 use Data::Dumper;
 use Mail::Sendmail;
-use Test::More tests => 7;
+use Test::More tests => 5;
 BEGIN { use_ok('Test::POP3') };
 
 #########################
 
 my ($host, $user, $pass, $smtp, $email) = get_info();
 
-# don't surprise/confuse the user
-# we expect to fail some of these
-$Test::Email::QUIET_DIAG = 1;
 
 SKIP: {
     skip 'No POP3 settings found', 5 unless $host;
+
     my $pop3 = Test::POP3->new({
         host    =>  $host,
         user    =>  $user,
@@ -29,7 +27,7 @@ SKIP: {
     
     # no messages
     $pop3->delete_all();
-    my $msg_count = $pop3->get_email_count(1);
+    my $msg_count = $pop3->get_email_count(0);
     is($msg_count, 0, 'no messages');
     
     # send 3 messages
@@ -40,7 +38,6 @@ SKIP: {
         message =>  'message 1',
         smtp    =>  $smtp,
     );
-    sleep 1;
     sendmail(
         to      =>  $email,
         from    =>  $email,
@@ -48,7 +45,6 @@ SKIP: {
         message =>  'message 2',
         smtp    =>  $smtp,
     );
-    sleep 1;
     sendmail(
         to      =>  $email,
         from    =>  $email,
@@ -58,22 +54,12 @@ SKIP: {
     );
     
     # then wait for them
-    is($pop3->wait_for_email_count(3), 3, 'found 3 messages');
+    is($pop3->wait_for_email_count(3,30), 3, 'waited for 3 messages');
     
-    $pop3->ok({
-        subject => qr/ 1$/,
-    }, 'subject regexp');
+    is($pop3->delete_all(), 3, 'deleted 3 messages');
     
-    $pop3->ok({
-        subject => 'test 2',
-    }, 'subject string');
-    
-    $pop3->ok({
-        subject         =>  'test 3',
-        'content-type'  =>  qr|text/plain|,
-    }, 'subject and content-type');
-    
-    is($pop3->delete_all(), 0, 'no others to be deleted');
+    # then timeout waiting for a message that's not there
+    is($pop3->wait_for_email_count(1,10), 0, 'timed out');
 };
 
 sub get_info {
